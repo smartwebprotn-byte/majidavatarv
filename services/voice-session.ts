@@ -121,6 +121,16 @@ export async function startVoiceSession() {
   store.setLiveState(false, true);
   store.incrementSession();
 
+  // Start tracking the session
+  const sessionId = store.startSession({
+    currentMode: 'IDLE',
+    transcription: { user: '', ai: '' },
+    audioLevel: 0,
+    isConnected: true,
+    duration: 0,
+    requestsCount: 0
+  });
+
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 

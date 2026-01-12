@@ -12,9 +12,9 @@ import {
    Mail, MessageCircle
 } from 'lucide-react';
 import { useStore } from '../store';
-import { VideoFiles, TodoTask, Product, VoiceName, LogEntry, GeneratedImage, SalesLead } from '../types';
+import { VideoFiles, TodoTask, Product, VoiceName, LogEntry, GeneratedImage, SalesLead, ActiveSession } from '../types';
 
-type Tab = 'dashboard' | 'videos' | 'usage' | 'leads' | 'todos' | 'studio' | 'catalog' | 'logs' | 'settings';
+type Tab = 'dashboard' | 'videos' | 'usage' | 'leads' | 'todos' | 'studio' | 'catalog' | 'logs' | 'sessions' | 'settings';
 
 export const ConfigPanel: React.FC = () => {
    const {
@@ -22,7 +22,7 @@ export const ConfigPanel: React.FC = () => {
       updateProductStock, updateProduct, addProduct, removeProduct, syncData, isSyncing, setVideo, videoUrls,
       markLeadAsProcessed, removeLead, exportLeads, todos, addTodo, toggleTodo, removeTodo,
       config, updateConfig, clearLogs, removeGeneratedImage, systemInstruction, updateSystemInstruction,
-      transcription, loadStoredData, isTransparent
+      transcription, loadStoredData, isTransparent, activeSessions, updateSession, endSession
    } = useStore();
 
    const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -129,9 +129,10 @@ export const ConfigPanel: React.FC = () => {
                            { id: 'todos', icon: ListChecks, label: 'Notes & Tâches', badge: pendingTodos },
                            { id: 'catalog', icon: Package, label: 'Stock Pro' },
                            { id: 'studio', icon: Palette, label: 'Marketing' },
+                           { id: 'sessions', icon: Activity, label: 'Sessions Manager' },
                            { id: 'videos', icon: FileVideo, label: 'Avatar AI' },
                            { id: 'logs', icon: Terminal, label: 'Live Console' },
-                           { id: 'usage', icon: Activity, label: 'Statistiques' },
+                           { id: 'usage', icon: BarChart3, label: 'Statistiques' },
                            { id: 'settings', icon: Settings2, label: 'Système' },
                         ].map((tab) => (
                            <button
@@ -763,6 +764,109 @@ export const ConfigPanel: React.FC = () => {
                                        <p className="text-sm text-blue-200/50 leading-relaxed italic">Pour un rendu sans latence, privilégiez des formats MP4 encodés en H.264 avec un débit modéré. Les vidéos sont stockées localement sur votre appareil (IDB).</p>
                                     </div>
                                  </div>
+                              </motion.div>
+                           )}
+
+                           {activeTab === 'sessions' && (
+                              <motion.div key="sessions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+                                 <div className="flex justify-between items-center">
+                                    <div>
+                                       <h3 className="text-2xl font-black text-white uppercase tracking-tight">Sessions Manager</h3>
+                                       <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Gestion des sessions actives et utilisateurs</p>
+                                    </div>
+                                    <div className="flex items-center gap-4 bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
+                                       <Activity className="w-5 h-5 text-emerald-500" />
+                                       <span className="text-[10px] font-black text-white uppercase tracking-widest">{activeSessions.length} Actives</span>
+                                    </div>
+                                 </div>
+
+                                 {activeSessions.length === 0 ? (
+                                    <div className="h-96 flex flex-col items-center justify-center bg-white/5 rounded-[4rem] border border-white/5 text-zinc-600 gap-6">
+                                       <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center border border-white/5">
+                                          <Activity className="w-10 h-10 opacity-20" />
+                                       </div>
+                                       <div className="text-center">
+                                          <p className="text-sm font-black uppercase tracking-[0.3em]">Aucune Session Active</p>
+                                          <p className="text-xs text-zinc-700 font-bold uppercase mt-2">Démarrez une conversation avec Abdelmajid</p>
+                                       </div>
+                                    </div>
+                                 ) : (
+                                    <div className="grid grid-cols-1 gap-6">
+                                       {activeSessions.map(session => (
+                                          <div key={session.id} className="bg-white/5 border border-white/5 rounded-[3rem] p-8 hover:bg-white/[0.08] transition-all shadow-xl">
+                                             <div className="flex items-center justify-between mb-6">
+                                                <div className="flex items-center gap-4">
+                                                   <div className={`w-4 h-4 rounded-full ${session.isConnected ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`} />
+                                                   <div>
+                                                      <h4 className="text-lg font-black text-white uppercase tracking-tight">Session {session.id.slice(0, 8)}</h4>
+                                                      <p className="text-[8px] text-zinc-500 uppercase tracking-widest">
+                                                         Démarrée {new Date(session.startTime).toLocaleString()} • {Math.floor((Date.now() - new Date(session.startTime).getTime()) / 1000)}s active
+                                                      </p>
+                                                   </div>
+                                                </div>
+                                                <button onClick={() => endSession(session.id)} className="p-3 bg-red-600/10 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all active:scale-90">
+                                                   <Trash2 className="w-5 h-5" />
+                                                </button>
+                                             </div>
+
+                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                                                   <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">État Actuel</label>
+                                                   <p className="text-sm font-bold text-white flex items-center gap-2">
+                                                      <Activity className={`w-4 h-4 ${session.currentMode === 'TALKING' ? 'text-blue-500' : session.currentMode === 'THINKING' ? 'text-amber-500' : 'text-emerald-500'}`} />
+                                                      {session.currentMode}
+                                                   </p>
+                                                </div>
+                                                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                                                   <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">Requêtes API</label>
+                                                   <p className="text-sm font-bold text-white">{session.requestsCount}</p>
+                                                </div>
+                                                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                                                   <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">Niveau Audio</label>
+                                                   <p className="text-sm font-bold text-white">{Math.round(session.audioLevel * 100)}%</p>
+                                                </div>
+                                             </div>
+
+                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                                                   <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">Informations Utilisateur</label>
+                                                   <div className="space-y-2 text-sm">
+                                                      <p className="text-zinc-400"><span className="text-zinc-500 font-bold">Navigateur:</span> {session.userAgent.split(' ').slice(0, 3).join(' ')}...</p>
+                                                      <p className="text-zinc-400"><span className="text-zinc-500 font-bold">Langue:</span> {session.userLanguage || 'Non détectée'}</p>
+                                                      <p className="text-zinc-400"><span className="text-zinc-500 font-bold">IP:</span> {session.userIP || 'Non détectée'}</p>
+                                                      <p className="text-zinc-400"><span className="text-zinc-500 font-bold">Localisation:</span> {session.userLocation || 'Non détectée'}</p>
+                                                   </div>
+                                                </div>
+                                                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                                                   <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">Transcription Active</label>
+                                                   <div className="space-y-3 max-h-32 overflow-y-auto custom-scrollbar-terminal">
+                                                      {session.transcription.user && (
+                                                         <div className="bg-blue-600/10 p-3 rounded-lg border border-blue-500/20">
+                                                            <span className="text-[8px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1 block">Client</span>
+                                                            <p className="text-xs text-blue-100 italic line-clamp-2">"{session.transcription.user}"</p>
+                                                         </div>
+                                                      )}
+                                                      {session.transcription.ai && (
+                                                         <div className="bg-zinc-800/40 p-3 rounded-lg border border-white/5">
+                                                            <span className="text-[8px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1 block">Abdelmajid</span>
+                                                            <p className="text-xs text-white line-clamp-2">"{session.transcription.ai}"</p>
+                                                         </div>
+                                                      )}
+                                                      {!session.transcription.user && !session.transcription.ai && (
+                                                         <p className="text-zinc-600 italic text-xs">Aucune activité récente</p>
+                                                      )}
+                                                   </div>
+                                                </div>
+                                             </div>
+
+                                             <div className="flex justify-between items-center text-[8px] text-zinc-600 uppercase tracking-widest">
+                                                <span>Dernière activité: {new Date(session.lastActivity).toLocaleTimeString()}</span>
+                                                <span>Durée totale: {Math.floor(session.duration / 60)}min {session.duration % 60}s</span>
+                                             </div>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 )}
                               </motion.div>
                            )}
 

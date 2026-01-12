@@ -37,12 +37,8 @@ export const VideoAvatar: React.FC = () => {
       stopVoiceSession();
       setMode('IDLE');
     } else {
-      if (videoUrls.intro) {
-        setMode('INTRO');
-      } else {
-        setMode('IDLE');
-        startVoiceSession();
-      }
+      setMode('IDLE');
+      startVoiceSession();
     }
   };
 

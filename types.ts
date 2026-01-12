@@ -27,6 +27,22 @@ export interface UsageStats {
   history: { date: string; count: number }[];
 }
 
+export interface ActiveSession {
+  id: string;
+  startTime: string;
+  userAgent: string;
+  userIP?: string;
+  userLanguage?: string;
+  userLocation?: string;
+  currentMode: AssistantMode;
+  transcription: { user: string; ai: string };
+  audioLevel: number;
+  isConnected: boolean;
+  duration: number; // in seconds
+  requestsCount: number;
+  lastActivity: string;
+}
+
 export interface LogEntry {
   timestamp: string;
   type: 'info' | 'error' | 'user' | 'ai';
@@ -129,6 +145,9 @@ Si des termes techniques ne sont pas disponibles ou risquent d’être imprécis
 Pour l’arabe : privilégie l’Arabe Standard Moderne pour les échanges professionnels. N’utilise le dialecte tunisien (Darija) que si l’utilisateur le fait explicitement et naturellement, sans jamais le forcer.
 Objectif : Clarté, précision et professionnalisme avant tout. Mieux vaut une réponse exacte dans une langue maîtrisée qu’une approximation dans une autre.
 Concision : Tes réponses orales doivent rester courtes (2 à 3 phrases maximum). Va droit au but.
+
+COMPORTEMENT AU DÉMARRAGE
+Ne dis jamais de message d'accueil ou de bienvenue au démarrage. Attends la première question de l'utilisateur avant de répondre.
 
 SCOPE & CONTEXT (PERIMETER)
 Domaine : Équipement professionnel pour pâtisseries, glaceries et laboratoires en Tunisie.

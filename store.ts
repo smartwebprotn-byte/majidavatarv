@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { get as idbGet, set as idbSet, clear as idbClear } from 'idb-keyval';
-import { AssistantMode, AppConfig, VideoFiles, LogEntry, SalesLead, TodoTask, GroundingChunk, Product, PRODUCT_CATALOG, GeneratedImage, UsageStats, VoiceName, SYSTEM_PROMPT } from './types';
+import { AssistantMode, AppConfig, VideoFiles, LogEntry, SalesLead, TodoTask, GroundingChunk, Product, PRODUCT_CATALOG, GeneratedImage, UsageStats, VoiceName, SYSTEM_PROMPT, ActiveSession } from './types';
 
 interface AppState {
   currentMode: AssistantMode;
@@ -13,6 +13,7 @@ interface AppState {
   todos: TodoTask[];
   catalog: Product[];
   generatedImages: GeneratedImage[];
+  activeSessions: ActiveSession[];
   systemInstruction: string;
   showConfig: boolean;
   isLive: boolean;
@@ -56,6 +57,11 @@ interface AppState {
   removeProduct: (id: string) => void;
   syncData: () => Promise<void>;
   updateSystemInstruction: (text: string) => void;
+
+  startSession: (sessionData?: Partial<ActiveSession>) => string;
+  updateSession: (id: string, updates: Partial<ActiveSession>) => void;
+  endSession: (id: string) => void;
+  clearInactiveSessions: () => void;
 
   clearData: () => Promise<void>;
   loadStoredData: () => Promise<void>;
@@ -103,6 +109,7 @@ export const useStore = create<AppState>((set, get) => ({
   todos: [],
   catalog: PRODUCT_CATALOG,
   generatedImages: [],
+  activeSessions: [],
   systemInstruction: SYSTEM_PROMPT,
   showConfig: false,
   isLive: false,
@@ -293,9 +300,44 @@ export const useStore = create<AppState>((set, get) => ({
 
   clearTodos: () => { set({ todos: [] }); idbSet('app-todos', []); },
 
+  startSession: (sessionData) => {
+    const sessionId = Math.random().toString(36).substr(2, 9);
+    const now = new Date().toISOString();
+    const newSession: ActiveSession = {
+      id: sessionId,
+      startTime: now,
+      userAgent: navigator.userAgent,
+      userLanguage: navigator.language,
+      currentMode: 'IDLE',
+      transcription: { user: '', ai: '' },
+      audioLevel: 0,
+      isConnected: true,
+      duration: 0,
+      requestsCount: 0,
+      lastActivity: now,
+      ...sessionData
+    };
+    set((state) => ({ activeSessions: [newSession, ...state.activeSessions] }));
+    return sessionId;
+  },
+
+  updateSession: (id, updates) => set((state) => ({
+    activeSessions: state.activeSessions.map(session =>
+      session.id === id ? { ...session, ...updates, lastActivity: new Date().toISOString() } : session
+    )
+  })),
+
+  endSession: (id) => set((state) => ({
+    activeSessions: state.activeSessions.filter(session => session.id !== id)
+  })),
+
+  clearInactiveSessions: () => set((state) => ({
+    activeSessions: state.activeSessions.filter(session => session.isConnected)
+  })),
+
   clearData: async () => {
     await idbClear();
-    set({ config: DEFAULT_CONFIG, usage: DEFAULT_USAGE, videoUrls: DEFAULT_VIDEO_URLS, logs: [], leads: [], todos: [], generatedImages: [], catalog: PRODUCT_CATALOG, systemInstruction: SYSTEM_PROMPT });
+    set({ config: DEFAULT_CONFIG, usage: DEFAULT_USAGE, videoUrls: DEFAULT_VIDEO_URLS, logs: [], leads: [], todos: [], generatedImages: [], activeSessions: [], catalog: PRODUCT_CATALOG, systemInstruction: SYSTEM_PROMPT });
     window.location.reload();
   },
 

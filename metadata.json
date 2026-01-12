@@ -1,0 +1,8 @@
+{
+  "name": "Abdelmajid - Expert T.T.A",
+  "description": "Magic Circle Voice Assistant for T.T.A Distribution. Video-based interactive avatar with seamless transitions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Icon Generator - T.T.A Distribution</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+        }
+
+        h1 {
+            margin-bottom: 0.5rem;
+            color: #38bdf8;
+        }
+
+        p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .icon-preview {
+            background: #334155;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .label {
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        button {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #0369a1;
+            transform: translateY(-1px);
+        }
+
+        .instructions {
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>T.T.A PWA Icons</h1>
+        <p>Générez vos icônes professionnelles en un clic.</p>
+
+        <div class="grid">
+            <div class="icon-preview">
+                <canvas id="canvas192" width="192" height="192"></canvas>
+                <div class="label">icon-192.png</div>
+                <button onclick="download('canvas192', 'icon-192.png')" style="margin-top: 10px;">Télécharger</button>
+            </div>
+            <div class="icon-preview">
+                <canvas id="canvas512" width="512" height="512"></canvas>
+                <div class="label">icon-512.png</div>
+                <button onclick="download('canvas512', 'icon-512.png')" style="margin-top: 10px;">Télécharger</button>
+            </div>
+        </div>
+
+        <button onclick="downloadAll()" style="background: #059669;">Tout télécharger</button>
+
+        <div class="instructions">
+            Placez ces fichiers dans le dossier <strong>public/</strong> de votre projet.
+        </div>
+    </div>
+
+    <script>
+        const config = {
+            bgColor: '#1e3a8a', // Bleu profond
+            textColor: '#ffffff',
+            text: 'TTA',
+            fontFamily: 'Arial Black, sans-serif'
+        };
+
+        function drawIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            // Fond
+            ctx.fillStyle = config.bgColor;
+            ctx.fillRect(0, 0, size, size);
+
+            // Texte
+            ctx.fillStyle = config.textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Taille de police proportionnelle
+            const fontSize = size * 0.35;
+            ctx.font = `bold ${fontSize}px ${config.fontFamily}`;
+
+            ctx.fillText(config.text, size / 2, size / 2);
+        }
+
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            download('canvas192', 'icon-192.png');
+            setTimeout(() => download('canvas512', 'icon-512.png'), 500);
+        }
+
+        // Initialisation
+        window.onload = () => {
+            drawIcon('canvas192', 192);
+            drawIcon('canvas512', 512);
+        };
+    </script>
+</body>
+
+</html>
